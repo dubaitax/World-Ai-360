@@ -7,8 +7,8 @@
 
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 // Replace with your Gemini API key or inject via GitHub Actions / env variable
-const GEMINI_API_KEY = 'YOUR_GEMINI_API_KEY';
-const GEMINI_MODEL   = 'gemini-3-flash-preview';
+const GROQ_API_KEY = 'YOUR_GROQ_KEY';
+const GROQ_MODEL = 'llama-3.3-70b-versatile';
 const UNSPLASH_SOURCE = 'https://picsum.photos/seed/';
 
 const CURRENCIES = {
@@ -325,18 +325,20 @@ async function handleSearch() {
   }
 }
 
-// GEMINI STREAMING
+// GROQ API
 async function callGemini(prompt) {
-  const url  = 'https://generativelanguage.googleapis.com/v1beta/models/' + GEMINI_MODEL + ':streamGenerateContent?alt=sse&key=' + GEMINI_API_KEY;
-  const body = {
-    contents: [{ parts: [{ text: prompt }] }],
-    generationConfig: { temperature: 0.6, maxOutputTokens: 3500, topP: 0.9 },
-  };
-
-  const res = await fetch(url, {
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + GROQ_API_KEY
+    },
+    body: JSON.stringify({
+      model: GROQ_MODEL,
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 3500,
+      temperature: 0.6
+    })
   });
 
   if (!res.ok) {
@@ -344,28 +346,11 @@ async function callGemini(prompt) {
     throw new Error((err.error && err.error.message) || ('HTTP ' + res.status));
   }
 
-  let fullText = '';
-  const reader  = res.body.getReader();
-  const decoder = new TextDecoder();
-
-  while (true) {
-    const result = await reader.read();
-    if (result.done) break;
-    const chunk = decoder.decode(result.value);
-    const lines = chunk.split('\n').filter(l => l.startsWith('data: '));
-    for (const line of lines) {
-      try {
-        const json = JSON.parse(line.slice(6));
-        const part = json && json.candidates && json.candidates[0] && json.candidates[0].content && json.candidates[0].content.parts && json.candidates[0].content.parts[0] && json.candidates[0].content.parts[0].text;
-        if (part) fullText += part;
-      } catch(e) {}
-    }
-  }
-
-  if (!fullText) throw new Error('No response from Gemini.');
+  const data = await res.json();
+  const fullText = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+  if (!fullText) throw new Error('No response from Groq.');
   return fullText;
 }
-
 // PROMPT
 function buildPrompt(query, tripType, budget) {
   var locationHint = '';
@@ -818,39 +803,22 @@ async function sendFollowup() {
   });
 
   try {
-    const url  = 'https://generativelanguage.googleapis.com/v1beta/models/' + GEMINI_MODEL + ':streamGenerateContent?alt=sse&key=' + GEMINI_API_KEY;
-    const body = {
-      contents: messages.map(function(m) {
-        return { role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] };
-      }),
-      generationConfig: { temperature: 0.7, maxOutputTokens: 800 }
-    };
-
-    const res = await fetch(url, {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + GROQ_API_KEY
+      },
+      body: JSON.stringify({
+        model: GROQ_MODEL,
+        messages: messages,
+        max_tokens: 800,
+        temperature: 0.7
+      })
     });
 
-    let fullText = '';
-    const reader  = res.body.getReader();
-    const decoder = new TextDecoder();
-
-    while (true) {
-      const result = await reader.read();
-      if (result.done) break;
-      const chunk = decoder.decode(result.value);
-      const lines = chunk.split('\n').filter(function(l) { return l.startsWith('data: '); });
-      for (var i = 0; i < lines.length; i++) {
-        try {
-          const json = JSON.parse(lines[i].slice(6));
-          const part = json && json.candidates && json.candidates[0] &&
-                       json.candidates[0].content && json.candidates[0].content.parts &&
-                       json.candidates[0].content.parts[0] && json.candidates[0].content.parts[0].text;
-          if (part) fullText += part;
-        } catch(e) {}
-      }
-    }
+    const data = await res.json();
+    const fullText = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
 
     if (typing) typing.remove();
     chatHistory.push({ role: 'assistant', content: fullText });
@@ -860,7 +828,6 @@ async function sendFollowup() {
     if (typing) typing.remove();
     appendChatMsg('ai', 'Sorry, kuch error aa gaya. Dobara try karo!');
   }
-
   isChatLoading = false;
   btn.disabled  = false;
   input.focus();

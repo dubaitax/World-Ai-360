@@ -438,7 +438,7 @@ fetch('https://api.pexels.com/v1/search?query=' + encodeURIComponent(searchQuery
 .then(function(pexData) {
   var photos = pexData.photos || [];
   window._allPhotos = photos.map(function(p) {
-    return { src: p.src.large, term: p.photographer };
+    return { src: p.src.large2x || p.src.large, thumb: p.src.small, term: p.photographer };
   });
 
   // Grid mein pehle 3 photos dikhao
@@ -644,6 +644,7 @@ document.addEventListener('click', function(e) {
 // LIGHTBOX
 function openLightbox(startIdx) {
   var photos = window._allPhotos || [];
+  if (photos.length === 0) return;
   var current = startIdx;
 
   var lb = document.createElement('div');
@@ -652,8 +653,8 @@ function openLightbox(startIdx) {
 
   function render() {
     var thumbs = '';
-    for (var i = 0; i < Math.min(22, photos.length); i++) {
-      thumbs += '<img src="' + photos[i].src.replace('1200/800','120/80') + '" onclick="window._lbGoto(' + i + ')" ' +
+    for (var i = 0; i < photos.length; i++) {
+      thumbs += '<img src="' + photos[i].thumb + '" onclick="window._lbGoto(' + i + ')" ' +
         'style="width:58px;height:38px;object-fit:cover;border-radius:5px;cursor:pointer;flex-shrink:0;' +
         'opacity:' + (i === current ? 1 : 0.45) + ';' +
         'border:' + (i === current ? '2px solid #C9A84C' : '2px solid transparent') + ';">';
@@ -666,7 +667,7 @@ function openLightbox(startIdx) {
       '<button onclick="window._lbNext()" ' +
         'style="position:absolute;right:16px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:32px;cursor:pointer;padding:10px 18px;border-radius:10px;">›</button>' +
       '<img src="' + photos[current].src + '" style="max-height:72vh;max-width:82vw;object-fit:contain;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.8);">' +
-      '<div style="color:#C9A84C;font-size:13px;margin-top:16px;font-family:monospace;">' + (current + 1) + ' / ' + photos.length + '  —  ' + photos[current].term + '</div>' +
+      '<div style="color:#C9A84C;font-size:13px;margin-top:16px;font-family:monospace;">' + (current + 1) + ' / ' + photos.length + '  —  📷 ' + photos[current].term + '</div>' +
       '<div style="display:flex;gap:6px;margin-top:14px;overflow-x:auto;max-width:90vw;padding:6px 10px;">' + thumbs + '</div>';
   }
 

@@ -796,6 +796,7 @@ body.cursor-hover .cursor-ring {
 .dest-image-overlay {
   position: absolute; inset: 0;
   background: linear-gradient(0deg, rgba(7,10,15,0.95) 0%, rgba(7,10,15,0.4) 60%, transparent 100%);
+  pointer-events: none;
 }
 .dest-title-block {
   position: relative;

@@ -274,6 +274,17 @@ function renderTrending() {
     </div>
   `).join('');
 }
+// Feature cards click
+document.querySelectorAll('.feature-card').forEach(card => {
+  const title = card.querySelector('h3')?.textContent;
+  card.style.cursor = 'pointer';
+  card.addEventListener('click', () => {
+    const q = title === 'Smart Itineraries' ? 'Best 7-day itinerary for a travel destination' :
+              title === 'Season Intelligence' ? 'Best season to visit top world destinations' :
+              title === 'Real Cost Estimates' ? 'Budget travel tips worldwide' : '';
+    if (q) { document.getElementById('searchInput').value = q; scrollToSearch(); setTimeout(handleSearch, 400); }
+  });
+});
 
 function searchFromCard(query) {
   const input = document.getElementById('searchInput');
@@ -483,7 +494,9 @@ window._allPhotos = allPhotos;
   // Seasons
   const seasonGrid = document.getElementById('seasonGrid');
   seasonGrid.innerHTML = (data.seasons || []).map((s, i) =>
-    `<div class="season-card${s.best ? ' best' : ''}" style="animation-delay:${i * 0.07}s">
+    // Aur iske andar ye onclick add karo:
+`<div class="season-card${s.best ? ' best' : ''}" style="cursor:pointer" 
+  onclick="searchFromCard('${data.destination} in ${s.name} season — what to do, weather, events, packing tips')"
       <div class="season-name">${s.name}</div>
       <div class="season-months">${s.months}</div>
       <div class="season-desc">${s.desc}</div>

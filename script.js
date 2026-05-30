@@ -9,7 +9,7 @@
 // Replace with your Gemini API key or inject via GitHub Actions / env variable
 const GROQ_API_KEY = 'YOUR_GROQ_KEY';
 const GROQ_MODEL = 'llama-3.3-70b-versatile';
-const UNSPLASH_SOURCE = 'https://picsum.photos/seed/';
+const PEXELS_API_KEY = 'YOUR_PEXELS_KEY';
 
 const CURRENCIES = {
   USD: { symbol: '$',   name: 'US Dollar',         flag: '🇺🇸', rate: 1      },
@@ -428,25 +428,34 @@ function parseResponse(text) {
 // RENDER RESULT
 function renderResult(data, originalQuery) {
   const imgGrid = document.getElementById('destImageGrid');
-  const terms   = data.searchImageTerms || [data.destination, data.country, 'travel'];
-  var allPhotos = [];
-  terms.slice(0, 3).forEach(function(term) {
-    for (var i = 1; i <= 22; i++) {
-      allPhotos.push({ src: 'https://picsum.photos/seed/' + encodeURIComponent(term) + '-' + i + '/1200/800', term: term });
-    }
+const searchQuery = data.destination + ' ' + data.country;
+window._allPhotos = [];
+
+fetch('https://api.pexels.com/v1/search?query=' + encodeURIComponent(searchQuery) + '&per_page=60', {
+  headers: { 'Authorization': PEXELS_API_KEY }
+})
+.then(function(r) { return r.json(); })
+.then(function(pexData) {
+  var photos = pexData.photos || [];
+  window._allPhotos = photos.map(function(p) {
+    return { src: p.src.large, term: p.photographer };
   });
-  window._allPhotos = allPhotos;
 
-imgGrid.innerHTML = terms.slice(0, 3).map(function(term, idx) {
-  var startIdx = idx * 22;
-  var seed = encodeURIComponent(term);
-  return '<img src="https://picsum.photos/seed/' + seed + '/800/500" ' +
-    'alt="' + term + '" loading="lazy" ' +
-    'style="cursor:pointer;width:100%;height:100%;object-fit:cover;" ' +
-    'onclick="openLightbox(' + startIdx + ')" ' +
-    'onerror="this.src=\'https://picsum.photos/800/500?random=' + idx + '\'">';
-}).join('');
+  // Grid mein pehle 3 photos dikhao
+  imgGrid.innerHTML = photos.slice(0, 3).map(function(p, idx) {
+    return '<img src="' + p.src.medium + '" ' +
+      'alt="' + searchQuery + '" loading="lazy" ' +
+      'style="cursor:pointer;width:100%;height:100%;object-fit:cover;" ' +
+      'onclick="openLightbox(' + idx + ')">';
+  }).join('');
 
+  if (photos.length === 0) {
+    imgGrid.innerHTML = '<div style="color:rgba(255,255,255,0.3);padding:20px;">No photos found</div>';
+  }
+})
+.catch(function() {
+  imgGrid.innerHTML = '<div style="color:rgba(255,255,255,0.3);padding:20px;">Photos load nahi hui</div>';
+});
   document.getElementById('destBadge').textContent   = (data.flag || '🌍') + ' ' + (data.region || data.country);
   document.getElementById('destName').textContent    = data.destination;
   document.getElementById('destTagline').textContent = data.tagline;

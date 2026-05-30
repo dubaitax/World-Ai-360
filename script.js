@@ -452,11 +452,13 @@ function renderResult(data, originalQuery) {
   });
   window._allPhotos = allPhotos;
 
-  imgGrid.innerHTML = terms.slice(0, 3).map(function(term, idx) {
-    return '<img src="https://picsum.photos/seed/' + encodeURIComponent(term) + '/800/500" alt="' + term + '" loading="lazy" ' +
-      'style="cursor:pointer" 'onclick="openLightbox(' + (idx * 22) + ')" ' +
-      'onerror="this.style.background=\'#1A2130\'">';
-  }).join('');
+ imgGrid.innerHTML = terms.slice(0, 3).map(function(term, idx) {
+  var startIdx = idx * 3;
+  return '<img src="https://picsum.photos/seed/' + encodeURIComponent(term) + '/800/500" ' +
+    'alt="' + term + '" loading="lazy" style="cursor:pointer" ' +
+    'onclick="openLightbox(' + startIdx + ')" ' +
+    'onerror="this.style.background=\'#1A2130\'">';
+}).join('');
 
   document.getElementById('destBadge').textContent   = (data.flag || '🌍') + ' ' + (data.region || data.country);
   document.getElementById('destName').textContent    = data.destination;

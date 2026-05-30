@@ -2252,3 +2252,108 @@ body.cursor-hover .cursor-ring {
   .compare-cards { grid-template-columns: 1fr; }
   .compare-explore-btns { grid-template-columns: 1fr; }
 }
+/* ═══════════ TRIP CARD GENERATOR ═══════════ */
+.tripcard-section {
+  margin-top: 2rem;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(201,168,76,0.15);
+  border-radius: 20px;
+  padding: 2rem;
+}
+
+.tripcard-sub {
+  font-size: 13px;
+  color: rgba(232,230,224,0.45);
+  margin: 0.3rem 0 1.5rem;
+}
+
+.tripcard-controls {
+  margin-bottom: 1.5rem;
+}
+
+.tripcard-theme-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tripcard-themes {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.theme-btn {
+  padding: 8px 16px;
+  border-radius: 50px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: transparent;
+  color: rgba(232,230,224,0.6);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.theme-btn.active {
+  background: rgba(201,168,76,0.15);
+  border-color: rgba(201,168,76,0.5);
+  color: #C9A84C;
+  font-weight: 600;
+}
+
+.theme-btn:hover:not(.active) {
+  background: rgba(255,255,255,0.05);
+}
+
+.tripcard-preview-wrap {
+  display: flex;
+  justify-content: center;
+  margin: 1.5rem 0;
+}
+
+#tripcardCanvas {
+  width: 320px;
+  height: 320px;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+
+.tripcard-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.tripcard-download-btn,
+.tripcard-copy-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tripcard-download-btn {
+  background: linear-gradient(135deg, #C9A84C, #E8C96A);
+  border: none;
+  color: #0A0F1A;
+}
+
+.tripcard-download-btn:hover { transform: translateY(-2px); }
+
+.tripcard-copy-btn {
+  background: transparent;
+  border: 1px solid rgba(201,168,76,0.3);
+  color: #C9A84C;
+}
+
+.tripcard-copy-btn:hover {
+  background: rgba(201,168,76,0.08);
+}

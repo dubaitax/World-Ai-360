@@ -28,6 +28,7 @@ jobs:
       - name: Inject Groq API Key into script.js
         run: |
           sed -i "s/YOUR_GROQ_KEY/${{ secrets.GROQ_API_KEY }}/g" script.js
+          sed -i "s/YOUR_PEXELS_KEY/${{ secrets.PEXELS_API_KEY }}/g" script.js
           echo "Injection check:"
           grep -n "GROQ_API_KEY" script.js | head -5
 

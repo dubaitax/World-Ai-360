@@ -404,7 +404,7 @@ function renderResult(data, originalQuery) {
   const imgGrid = document.getElementById('destImageGrid');
   const terms   = data.searchImageTerms || [data.destination, data.country, 'travel'];
   imgGrid.innerHTML = terms.slice(0, 3).map(term =>
-    `<img src="${UNSPLASH_SOURCE}${encodeURIComponent(term)}&sig=${Math.random()}" alt="${term}" loading="lazy" onerror="this.style.background='#1A2130'">`
+    `<img src="${UNSPLASH_SOURCE}${encodeURIComponent(term)}/800/500" alt="${term}" loading="lazy" onerror="this.style.background='#1A2130'">`
   ).join('');
 
   // Dest header

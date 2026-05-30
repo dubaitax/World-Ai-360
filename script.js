@@ -79,6 +79,36 @@ document.addEventListener('DOMContentLoaded', () => {
 function initLoader() {
   const loader = document.getElementById('loader');
   setTimeout(() => loader.classList.add('hidden'), 1800);
+   // User ka location detect karo
+if (navigator.geolocation) {
+  navigator.geolocation.getCurrentPosition(pos => {
+    fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&localityLanguage=en`)
+      .then(r => r.json())
+      .then(d => {
+        const city = d.city || d.locality || '';
+        const country = d.countryName || '';
+        if (city) {
+          window._userLocation = { city, country };
+          // Search input mein placeholder update karo
+          const inp = document.getElementById('searchInput');
+          if (inp) inp.placeholder = `e.g. 'Best places near ${city}' or any destination worldwide...`;
+          // Currency auto-set karo country ke hisab se
+          autoSetCurrency(d.countryCode);
+        }
+      }).catch(() => {});
+  }, () => {});
+}
+
+function autoSetCurrency(countryCode) {
+  const map = { IN:'INR', GB:'GBP', JP:'JPY', AU:'AUD', CA:'CAD', CH:'CHF', SG:'SGD', AE:'AED', SA:'SAR', BR:'BRL', MX:'MXN', TH:'THB', ID:'IDR', KR:'KRW', CN:'CNY', TR:'TRY', ZA:'ZAR', EG:'EGP', NG:'NGN', PK:'PKR', BD:'BDT', LK:'LKR', NP:'NPR', RU:'RUB' };
+  const code = map[countryCode];
+  if (code && CURRENCIES[code]) {
+    selectedCurrency = code;
+    const sel = document.getElementById('currencySelect');
+    if (sel) sel.value = code;
+    updateCurrencyDisplay();
+  }
+}
 }
 
 // ─── CUSTOM CURSOR ────────────────────────────────────────────────────────────
@@ -279,6 +309,8 @@ async function handleSearch() {
   showLoading();
 
   const prompt = buildPrompt(query, selectedTripType, selectedBudget);
+   // Ye line add karo prompt string mein, "Trip type:" ke upar
+${ window._userLocation ? `User is from ${window._userLocation.city}, ${window._userLocation.country}. Tailor flight costs and travel advice accordingly.` : '' }
 
   try {
     const responseText = await callGemini(prompt);
@@ -291,20 +323,41 @@ async function handleSearch() {
   }
 }
 
-// ─── GEMINI API CALL ─────────────────────────────────────────────────────────
 async function callGemini(prompt) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:streamGenerateContent?alt=sse&key=${GEMINI_API_KEY}`;
   
   const body = {
     contents: [{ parts: [{ text: prompt }] }],
-    generationConfig: { temperature: 0.7, maxOutputTokens: 4096, topP: 0.95 },
-    safetySettings: [
-      { category: 'HARM_CATEGORY_HARASSMENT',        threshold: 'BLOCK_NONE' },
-      { category: 'HARM_CATEGORY_HATE_SPEECH',       threshold: 'BLOCK_NONE' },
-      { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
-      { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
-    ]
+    generationConfig: { temperature: 0.6, maxOutputTokens: 3500, topP: 0.9 },
   };
+
+  const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err?.error?.message || `HTTP ${res.status}`);
+  }
+  
+  let fullText = '';
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    const chunk = decoder.decode(value);
+    const lines = chunk.split('\n').filter(l => l.startsWith('data: '));
+    for (const line of lines) {
+      try {
+        const json = JSON.parse(line.slice(6));
+        const part = json?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (part) fullText += part;
+      } catch {}
+    }
+  }
+  
+  if (!fullText) throw new Error('No response from Gemini.');
+  return fullText;
+}
 
   const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   if (!res.ok) {
@@ -401,11 +454,22 @@ function parseResponse(text) {
 // ─── RENDER RESULT ────────────────────────────────────────────────────────────
 function renderResult(data, originalQuery) {
   // Images
-  const imgGrid = document.getElementById('destImageGrid');
-  const terms   = data.searchImageTerms || [data.destination, data.country, 'travel'];
-  imgGrid.innerHTML = terms.slice(0, 3).map(term =>
-    `<img src="${UNSPLASH_SOURCE}${encodeURIComponent(term)}/800/500" alt="${term}" loading="lazy" onerror="this.style.background='#1A2130'">`
-  ).join('');
+ const imgGrid = document.getElementById('destImageGrid');
+const terms = data.searchImageTerms || [data.destination, data.country, 'travel'];
+// 60-70 photos generate karo — 20-25 per term, 3 terms
+let allPhotos = [];
+terms.slice(0, 3).forEach(term => {
+  for (let i = 1; i <= 22; i++) {
+    allPhotos.push({ src: `https://picsum.photos/seed/${encodeURIComponent(term)}-${i}/1200/800`, term });
+  }
+});
+// Header mein sirf 3 dikhao, click pe lightbox
+imgGrid.innerHTML = terms.slice(0, 3).map((term, idx) =>
+  `<img src="https://picsum.photos/seed/${encodeURIComponent(term)}/800/500" alt="${term}" loading="lazy" 
+   style="cursor:pointer" onclick="openLightbox(${idx}, window._allPhotos)" 
+   onerror="this.style.background='#1A2130'">`
+).join('');
+window._allPhotos = allPhotos;
 
   // Dest header
   document.getElementById('destBadge').textContent   = `${data.flag || '🌍'} ${data.region || data.country}`;
@@ -596,5 +660,42 @@ document.addEventListener('click', (e) => {
     document.getElementById('currencyDropdown')?.classList.remove('open');
   }
 });
+function openLightbox(startIdx, photos) {
+  let current = startIdx;
+  const lb = document.createElement('div');
+  lb.id = 'lightbox';
+  lb.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;`;
+  
+  const render = () => {
+    lb.innerHTML = `
+      <button onclick="document.getElementById('lightbox').remove()" 
+        style="position:absolute;top:20px;right:28px;background:none;border:none;color:#fff;font-size:32px;cursor:pointer;">✕</button>
+      <button onclick="window._lbPrev()" 
+        style="position:absolute;left:20px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.1);border:none;color:#fff;font-size:28px;cursor:pointer;padding:12px 18px;border-radius:8px;">‹</button>
+      <button onclick="window._lbNext()" 
+        style="position:absolute;right:20px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.1);border:none;color:#fff;font-size:28px;cursor:pointer;padding:12px 18px;border-radius:8px;">›</button>
+      <img src="${photos[current].src}" style="max-height:75vh;max-width:85vw;object-fit:contain;border-radius:12px;">
+      <div style="color:#C9A84C;font-size:13px;margin-top:16px;font-family:monospace">${current+1} / ${photos.length} — ${photos[current].term}</div>
+      <div style="display:flex;gap:6px;margin-top:16px;overflow-x:auto;max-width:90vw;padding:8px">
+        ${photos.slice(0,20).map((p,i) => 
+          `<img src="${p.src.replace('1200/800','120/80')}" onclick="window._lbGoto(${i})" 
+           style="width:60px;height:40px;object-fit:cover;border-radius:4px;cursor:pointer;opacity:${i===current?1:0.5};border:${i===current?'2px solid #C9A84C':'2px solid transparent'}">`
+        ).join('')}
+      </div>`;
+  };
+  
+  window._lbPrev = () => { current = (current - 1 + photos.length) % photos.length; render(); };
+  window._lbNext = () => { current = (current + 1) % photos.length; render(); };
+  window._lbGoto = (i) => { current = i; render(); };
+  
+  document.body.appendChild(lb);
+  render();
+  
+  document.addEventListener('keydown', function lbKey(e) {
+    if (e.key === 'ArrowRight') window._lbNext();
+    if (e.key === 'ArrowLeft') window._lbPrev();
+    if (e.key === 'Escape') { lb.remove(); document.removeEventListener('keydown', lbKey); }
+  });
+}
 
   

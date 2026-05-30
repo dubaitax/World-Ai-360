@@ -203,13 +203,9 @@ async function handleSearch() {
 
 // ─── GEMINI API CALL ─────────────────────────────────────────────────────────
 async function callGemini(prompt) {
-  if (!GEMINI_API_KEY || GEMINI_API_KEY === 'YOUR_GEMINI_API_KEY') {
-    throw new Error('API key not configured. Please set your Gemini API key.');
-  }
-
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
-
-  const body = {
+  
+   const body = {
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: {
       temperature: 0.7,

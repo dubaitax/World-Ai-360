@@ -2522,3 +2522,28 @@ body.cursor-hover .cursor-ring {
     grid-template-columns: repeat(4, 1fr);
   }
 }
+/* ═══ KAMLESH YADAV ANIMATION ═══ */
+.kamlesh-name {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 3.5px;
+  text-transform: uppercase;
+  background: linear-gradient(90deg, #b8860b, #C9A84C, #FFD700, #fff5c0, #FFD700, #C9A84C, #b8860b);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: kamlesh-shimmer 2.5s linear infinite;
+  position: relative;
+  z-index: 1;
+}
+.kamlesh-underline {
+  position: absolute;
+  bottom: -5px; left: 0;
+  height: 2px; width: 0%;
+  background: linear-gradient(90deg, transparent, #FFD700, transparent);
+  border-radius: 2px;
+  animation: kamlesh-underline 3s ease-in-out infinite;
+}
+.kamlesh-particles {
+  position: absolute;

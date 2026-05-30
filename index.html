@@ -37,6 +37,16 @@
         <a href="#features" class="nav-link">Features</a>
         <a href="#trending" class="nav-link">Trending</a>
       </nav>
+      <div class="currency-wrap">
+        <button class="currency-btn" id="currencyBtn" onclick="toggleCurrencyDropdown()">
+          <span id="currencyBadge">🇺🇸 USD</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="currency-dropdown" id="currencyDropdown">
+          <div class="currency-dropdown-header">Select Currency</div>
+          <select id="currencySelect" size="8"></select>
+        </div>
+      </div>
       <button class="btn-header" onclick="scrollToSearch()">Start Journey</button>
     </div>
   </header>
@@ -362,8 +372,8 @@
         </div>
       </div>
       <div class="footer-bottom">
-        <p>© 2025 World AI 360. Built with ❤️ and Gemini AI.</p>
-        <p class="footer-note">Powered by Google Gemini — Travel data may vary. Always verify with official sources.</p>
+        <p>© 2025 World AI 360. Built By Kamlesh Yadav.</p>
+        <p class="footer-note">Powered by Kamlesh Yadav — Travel data may vary. Always verify with official sources.</p>
       </div>
     </div>
   </footer>

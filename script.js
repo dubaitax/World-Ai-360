@@ -477,7 +477,7 @@ function renderResult(data, originalQuery) {
       '<div class="related-name">' + r.name + '</div>' +
       '<div class="related-desc">' + r.country + ' — ' + r.desc + '</div></div>';
   }).join('');
-
+   initFollowupChat(data.destination);
   showResult();
   setTimeout(function() {
     document.getElementById('resultContent').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -661,4 +661,178 @@ function openLightbox(startIdx) {
       document.removeEventListener('keydown', lbKey);
     }
   });
+}
+// ═══════════ AI FOLLOW-UP CHAT ═══════════
+let chatHistory = [];
+let isChatLoading = false;
+
+function initFollowupChat(destination) {
+  chatHistory = [];
+  const msgs = document.getElementById('chatMessages');
+  const sugg = document.getElementById('chatSuggestions');
+  if (!msgs) return;
+
+  msgs.innerHTML = '';
+
+  // Welcome message
+  appendChatMsg('ai', 'Hi! I know everything about <strong>' + destination + '</strong>. Ask me anything — safety, food, packing, local tips, budget, hidden gems!');
+
+  // Suggestion pills
+  const suggestions = [
+    'Is it safe for solo travel?',
+    'What to pack?',
+    'Best local food to try?',
+    'Any scams to avoid?',
+    'Cheapest way to get around?',
+    'Hidden gems tourists miss?'
+  ];
+
+  sugg.innerHTML = suggestions.map(function(s) {
+    return '<button class="chat-pill" onclick="fillChatInput(\'' + s + '\')">' + s + '</button>';
+  }).join('');
+
+  // Enter key support
+  const input = document.getElementById('chatInput');
+  if (input) {
+    input.onkeydown = function(e) {
+      if (e.key === 'Enter' && !isChatLoading) sendFollowup();
+    };
+  }
+}
+
+function fillChatInput(text) {
+  const input = document.getElementById('chatInput');
+  if (input) {
+    input.value = text;
+    input.focus();
+  }
+}
+
+function appendChatMsg(role, html) {
+  const msgs = document.getElementById('chatMessages');
+  if (!msgs) return;
+
+  const div = document.createElement('div');
+  div.className = 'chat-msg ' + role;
+
+  const avatar = document.createElement('div');
+  avatar.className = 'chat-avatar';
+  avatar.textContent = role === 'user' ? 'You' : 'AI';
+
+  const bubble = document.createElement('div');
+  bubble.className = 'chat-bubble';
+  bubble.innerHTML = html;
+
+  div.appendChild(avatar);
+  div.appendChild(bubble);
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return div;
+}
+
+function showTyping() {
+  const msgs = document.getElementById('chatMessages');
+  if (!msgs) return null;
+
+  const div = document.createElement('div');
+  div.className = 'chat-msg ai';
+  div.id = 'typingIndicator';
+
+  const avatar = document.createElement('div');
+  avatar.className = 'chat-avatar';
+  avatar.textContent = 'AI';
+
+  const bubble = document.createElement('div');
+  bubble.className = 'chat-bubble typing';
+  bubble.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+
+  div.appendChild(avatar);
+  div.appendChild(bubble);
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return div;
+}
+
+async function sendFollowup() {
+  const input = document.getElementById('chatInput');
+  const btn   = document.getElementById('chatSendBtn');
+  const question = (input.value || '').trim();
+  if (!question || isChatLoading) return;
+
+  isChatLoading = true;
+  btn.disabled  = true;
+  input.value   = '';
+
+  appendChatMsg('user', question);
+  chatHistory.push({ role: 'user', content: question });
+
+  const typing = showTyping();
+
+  const destination = (lastParsedData && lastParsedData.destination) || currentQuery || 'this destination';
+  const context     = lastParsedData ? JSON.stringify({
+    destination: lastParsedData.destination,
+    country:     lastParsedData.country,
+    tagline:     lastParsedData.tagline,
+    tips:        lastParsedData.tips
+  }) : '';
+
+  const systemPrompt = 'You are a friendly expert travel guide for ' + destination + '. ' +
+    'Context: ' + context + '. ' +
+    'Answer in 2-4 short paragraphs. Use **bold** for key points. Be specific, practical, and conversational. ' +
+    'Currency context: user selected ' + selectedCurrency + '.';
+
+  const messages = [{ role: 'user', content: systemPrompt + '\n\nUser asks: ' + question }];
+
+  // Add previous chat history (last 4 messages)
+  chatHistory.slice(-4).forEach(function(m) {
+    messages.push(m);
+  });
+
+  try {
+    const url  = 'https://generativelanguage.googleapis.com/v1beta/models/' + GEMINI_MODEL + ':streamGenerateContent?alt=sse&key=' + GEMINI_API_KEY;
+    const body = {
+      contents: messages.map(function(m) {
+        return { role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] };
+      }),
+      generationConfig: { temperature: 0.7, maxOutputTokens: 800 }
+    };
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+
+    let fullText = '';
+    const reader  = res.body.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const result = await reader.read();
+      if (result.done) break;
+      const chunk = decoder.decode(result.value);
+      const lines = chunk.split('\n').filter(function(l) { return l.startsWith('data: '); });
+      for (var i = 0; i < lines.length; i++) {
+        try {
+          const json = JSON.parse(lines[i].slice(6));
+          const part = json && json.candidates && json.candidates[0] &&
+                       json.candidates[0].content && json.candidates[0].content.parts &&
+                       json.candidates[0].content.parts[0] && json.candidates[0].content.parts[0].text;
+          if (part) fullText += part;
+        } catch(e) {}
+      }
+    }
+
+    if (typing) typing.remove();
+    chatHistory.push({ role: 'assistant', content: fullText });
+    appendChatMsg('ai', markdownToHtml(fullText));
+
+  } catch(err) {
+    if (typing) typing.remove();
+    appendChatMsg('ai', 'Sorry, kuch error aa gaya. Dobara try karo!');
+  }
+
+  isChatLoading = false;
+  btn.disabled  = false;
+  input.focus();
 }

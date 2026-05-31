@@ -69,6 +69,23 @@ document.addEventListener('DOMContentLoaded', () => {
   initQuickPills();
   renderTrending();
   initCurrencySelector();
+
+  // Live currency rates fetch karo
+  fetch('https://api.exchangerate-api.com/v4/latest/USD')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data && data.rates) {
+        Object.keys(CURRENCIES).forEach(function(code) {
+          if (data.rates[code]) {
+            CURRENCIES[code].rate = data.rates[code];
+          }
+        });
+        updateCurrencyDisplay();
+      }
+    })
+    .catch(function() {
+      // API fail hogi toh hardcoded rates rahenge
+    });
 });
 
 // LOADER
@@ -1158,20 +1175,20 @@ function buildComparePrompt(dest1, dest2) {
     '  "dest1": {\n' +
     '    "name": "Full name",\n' +
     '    "country": "Country",\n' +
-    '    "flag": "🌍",\n' +
-    '    "dailyBudget": "$40-$80",\n' +
-    '    "bestSeason": "Oct-Apr",\n' +
-    '    "visa": "Visa on Arrival / Free / Required",\n' +
-    '    "avgFlight": "$600-$900",\n' +
-    '    "safetyScore": "8/10",\n' +
-    '    "language": "English / Local",\n' +
-    '    "idealDays": "7-10 days",\n' +
-    '    "highlights": "Top 2-3 things in one line"\n' +
+    '    "flag": "correct flag emoji for this country",\n' +
+    '    "dailyBudget": "actual daily budget in USD for ' + selectedTripType + ' traveler",\n' +
+    '    "bestSeason": "actual best months to visit",\n' +
+    '    "visa": "actual visa requirement",\n' +
+    '    "avgFlight": "actual flight cost in USD from ' + (window._userLocation ? window._userLocation.city + ', ' + window._userLocation.country : 'nearest major airport') + '",\n' +
+    '    "safetyScore": "actual safety score out of 10",\n' +
+    '    "language": "actual official language",\n' +
+    '    "idealDays": "actual recommended duration",\n' +
+    '    "highlights": "actual top 2-3 unique things about this destination"\n' +
     '  },\n' +
     '  "dest2": {\n' +
     '    "name": "Full name",\n' +
     '    "country": "Country",\n' +
-    '    "flag": "🌏",\n' +
+    '    "flag": "correct flag emoji for this country",\n' +
     '    "dailyBudget": "$30-$60",\n' +
     '    "bestSeason": "Nov-Mar",\n' +
     '    "visa": "Visa on Arrival / Free / Required",\n' +
@@ -2071,13 +2088,11 @@ async function generateDreamTrip() {
     '      "destination": "City, Country",\n' +
     '      "country": "Country",\n' +
     '      "flag": "🌍",\n' +
-    '      "matchScore": 95,\n' +
-    '      "matchReason": "One line why this perfectly matches their vibe",\n' +
-    '      "bestFor": "Honeymoon / Adventure / Family etc",\n' +
-    '      "avgBudget": "$800-$1200 total",\n' +
-    '      "bestSeason": "Oct-Mar",\n' +
-    '      "topThings": ["thing1", "thing2", "thing3"],\n' +
-    '      "hiddenGem": "One unique thing about this place",\n' +
+    '      "matchScore": actual match percentage 0-100 based on how well it matches the travelers mood,\n' +
+    '      "avgBudget": "actual total trip budget in USD for ' + selectedBudget + ' traveler",\n' +
+    '      "bestSeason": "actual best months for this destination",\n' +
+    '      "topThings": ["actual top thing 1", "actual top thing 2", "actual top thing 3"],\n' +
+    '      "hiddenGem": "actual unique lesser-known fact about this place",\n' +
     '      "searchQuery": "Complete travel guide to [destination]"\n' +
     '    }\n' +
     '  ]\n' +

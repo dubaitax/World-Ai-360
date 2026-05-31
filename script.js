@@ -354,101 +354,103 @@ async function callGemini(prompt) {
 // PROMPT
 function buildPrompt(query, tripType, budget) {
   var locationHint = '';
+  var userCity = (window._userLocation ? window._userLocation.city + ', ' + window._userLocation.country : 'their nearest major airport');
   if (window._userLocation) {
     locationHint = 'User is from ' + window._userLocation.city + ', ' + window._userLocation.country + '. Tailor flight costs and travel advice accordingly.';
   }
 
   return 'You are World AI 360 — the world\'s most comprehensive travel intelligence system.\n' +
-'CRITICAL LANGUAGE INSTRUCTION: You MUST write the "aiResponse" field and all "tips" array items and all "tagline" field ENTIRELY in ' + selectedLang + ' language. All other JSON fields (destination, country, region, label names, visa values, season names) stay in English for app functionality. Only aiResponse, tips array, and tagline must be in ' + selectedLang + '.\n' +
+'CRITICAL LANGUAGE INSTRUCTION: You MUST write the "aiResponse" field and all "tips" array items and all "tagline" field ENTIRELY in ' + selectedLang + ' language. All other JSON fields stay in English for app functionality.\n' +
     'A user is asking about: "' + query + '"\n' +
     'Trip type: ' + tripType + ' | Budget: ' + budget + '\n' +
     locationHint + '\n' +
-    'IMPORTANT: All monetary values MUST be in USD (US Dollars) using $ symbol. The app will convert to other currencies automatically.\n' +
+    'IMPORTANT: All monetary values MUST be in USD using $ symbol. The app converts to other currencies automatically.\n' +
+    'Provide REAL and ACCURATE data for this specific destination. Do NOT use placeholder or example values.\n' +
     'Respond ONLY with a valid JSON object (no markdown, no backticks, no extra text).\n' +
     '{\n' +
     '  "destination": "Full Destination Name",\n' +
     '  "country": "Country",\n' +
     '  "region": "Continent/Region",\n' +
-    '  "tagline": "One-line poetic description",\n' +
-    '  "flag": "🌍",\n' +
-    '  "searchImageTerms": ["term1 travel", "term2 landscape", "term3 culture"],\n' +
+    '  "tagline": "One-line poetic description in ' + selectedLang + '",\n' +
+    '  "flag": "correct flag emoji for this country",\n' +
+    '  "searchImageTerms": ["specific landmark", "specific landscape", "specific culture scene"],\n' +
     '  "quickInfo": [\n' +
-    '    { "icon": "🌡️", "label": "Best Season", "value": "Oct–Apr", "sub": "Avg 25°C • Low humidity • No rain" },\n' +
-    '    { "icon": "💰", "label": "Daily Budget", "value": "$40–$80", "sub": "Hotels+Food+Transport included" },\n' +
-    '    { "icon": "✈️", "label": "Avg Flight", "value": "$800–$1200", "sub": "From nearest major airport" },\n' +
-    '     { "icon": "🛂", "label": "Visa", "value": "Visa on Arrival", "sub": "30 days • $25 fee • Apply online" },\n' +
-    '    { "icon": "🗣️", "label": "Language", "value": "Bahasa/English", "sub": "English common" },\n' +
-    '     { "icon": "⏱️", "label": "Ideal Stay", "value": "7–14 days", "sub": "Min 5 days • Ideal 10 days" }\n' +
+    '    { "icon": "🌡️", "label": "Best Season", "value": "actual best months for this destination", "sub": "actual avg temp • actual humidity • actual rain info" },\n' +
+    '    { "icon": "💰", "label": "Daily Budget", "value": "actual realistic daily cost in USD for ' + tripType + ' traveler", "sub": "Hotels+Food+Transport included" },\n' +
+    '    { "icon": "✈️", "label": "Avg Flight", "value": "actual flight cost in USD from ' + userCity + '", "sub": "From ' + userCity + '" },\n' +
+    '    { "icon": "🛂", "label": "Visa", "value": "actual visa requirement for most travelers", "sub": "actual duration • actual fee in USD if any • how to apply" },\n' +
+    '    { "icon": "🗣️", "label": "Language", "value": "actual official language of destination", "sub": "actual English proficiency level among locals" },\n' +
+    '    { "icon": "⏱️", "label": "Ideal Stay", "value": "actual recommended trip duration", "sub": "actual minimum days • actual ideal days" }\n' +
     '  ],\n' +
     '  "seasons": [\n' +
-    '    { "name": "Winter", "months": "Dec – Feb", "desc": "Short description", "best": false },\n' +
-    '    { "name": "Spring", "months": "Mar – May", "desc": "Short description", "best": true },\n' +
-    '    { "name": "Summer", "months": "Jun – Aug", "desc": "Short description", "best": false },\n' +
-    '    { "name": "Autumn", "months": "Sep – Nov", "desc": "Short description", "best": false }\n' +
+    '    { "name": "Winter", "months": "actual winter months", "desc": "actual winter weather and experience", "best": false },\n' +
+    '    { "name": "Spring", "months": "actual spring months", "desc": "actual spring weather and experience", "best": true },\n' +
+    '    { "name": "Summer", "months": "actual summer months", "desc": "actual summer weather and experience", "best": false },\n' +
+    '    { "name": "Autumn", "months": "actual autumn months", "desc": "actual autumn weather and experience", "best": false }\n' +
     '  ],\n' +
-    '  "aiResponse": "600–900 word markdown travel guide. Sections: ### Overview, ### Top Attractions, ### Getting There, ### Local Food & Culture, ### Hidden Gems, ### Practical Tips. Use **bold** for key points.",\n' +
+    '  "aiResponse": "600-900 word markdown travel guide in ' + selectedLang + '. Sections: ### Overview, ### Top Attractions, ### Getting There, ### Local Food & Culture, ### Hidden Gems, ### Practical Tips. Use **bold** for key points.",\n' +
     '  "budgetBreakdown": [\n' +
-    '    { "tier": "Budget", "pricePerDay": "$25–$45", "featured": false, "items": [{ "label": "Accommodation", "value": "$8–$15" },{ "label": "Food", "value": "$6–$10" },{ "label": "Transport", "value": "$3–$8" },{ "label": "Activities", "value": "$5–$12" }] },\n' +
-    '    { "tier": "Mid-Range", "pricePerDay": "$60–$120", "featured": true, "items": [{ "label": "Accommodation", "value": "$30–$60" },{ "label": "Food", "value": "$15–$25" },{ "label": "Transport", "value": "$8–$15" },{ "label": "Activities", "value": "$10–$20" }] },\n' +
-    '    { "tier": "Luxury", "pricePerDay": "$200–$500+", "featured": false, "items": [{ "label": "Accommodation", "value": "$100–$300" },{ "label": "Food", "value": "$40–$80" },{ "label": "Transport", "value": "$30–$60" },{ "label": "Activities", "value": "$30–$60" }] }\n' +
+    '    { "tier": "Budget", "pricePerDay": "actual budget daily cost in USD", "featured": false, "items": [{ "label": "Accommodation", "value": "actual budget hotel cost" },{ "label": "Food", "value": "actual budget food cost" },{ "label": "Transport", "value": "actual local transport cost" },{ "label": "Activities", "value": "actual budget activity cost" }] },\n' +
+    '    { "tier": "Mid-Range", "pricePerDay": "actual mid-range daily cost in USD", "featured": true, "items": [{ "label": "Accommodation", "value": "actual mid hotel cost" },{ "label": "Food", "value": "actual mid food cost" },{ "label": "Transport", "value": "actual mid transport cost" },{ "label": "Activities", "value": "actual mid activity cost" }] },\n' +
+    '    { "tier": "Luxury", "pricePerDay": "actual luxury daily cost in USD", "featured": false, "items": [{ "label": "Accommodation", "value": "actual luxury hotel cost" },{ "label": "Food", "value": "actual luxury food cost" },{ "label": "Transport", "value": "actual luxury transport cost" },{ "label": "Activities", "value": "actual luxury activity cost" }] }\n' +
     '  ],\n' +
-    '  "tips": ["tip1","tip2","tip3","tip4","tip5","tip6"],\n' +
+    '  "tips": ["actual tip 1 in ' + selectedLang + '","actual tip 2","actual tip 3","actual tip 4","actual tip 5","actual tip 6"],\n' +
     '  "weatherByMonth": [\n' +
-'    { "month": "Jan", "temp": 28, "rainfall": 20,  "crowd": 60, "desc": "Sunny and warm" },\n' +
-'    { "month": "Feb", "temp": 29, "rainfall": 15,  "crowd": 55, "desc": "Best weather" },\n' +
-'    { "month": "Mar", "temp": 31, "rainfall": 25,  "crowd": 50, "desc": "Getting warmer" },\n' +
-'    { "month": "Apr", "temp": 33, "rainfall": 60,  "crowd": 45, "desc": "Pre-monsoon" },\n' +
-'    { "month": "May", "temp": 32, "rainfall": 120, "crowd": 35, "desc": "Monsoon starts" },\n' +
-'    { "month": "Jun", "temp": 29, "rainfall": 200, "crowd": 25, "desc": "Heavy rains" },\n' +
-'    { "month": "Jul", "temp": 27, "rainfall": 250, "crowd": 20, "desc": "Peak monsoon" },\n' +
-'    { "month": "Aug", "temp": 27, "rainfall": 220, "crowd": 22, "desc": "Still rainy" },\n' +
-'    { "month": "Sep", "temp": 28, "rainfall": 150, "crowd": 30, "desc": "Monsoon ends" },\n' +
-'    { "month": "Oct", "temp": 29, "rainfall": 70,  "crowd": 55, "desc": "Good weather" },\n' +
-'    { "month": "Nov", "temp": 28, "rainfall": 30,  "crowd": 70, "desc": "Peak season" },\n' +
-'    { "month": "Dec", "temp": 27, "rainfall": 20,  "crowd": 80, "desc": "Festive season" }\n' +
-'  ],\n' +
-     '  "visaDetails": {\n' +
-'    "passportFriendly": ["USA","UK","EU","Australia","Canada"],\n' +
-'    "visaOnArrival": ["India","Thailand","Brazil"],\n' +
-'    "visaRequired": ["Pakistan","Nigeria"],\n' +
-'    "duration": "30 days",\n' +
-'    "cost": "$25 USD",\n' +
-'    "processingTime": "On arrival / 3-5 days online",\n' +
-'    "documents": ["Valid passport (6 months validity)","Return ticket","Hotel booking","Sufficient funds proof"],\n' +
-'    "applyLink": "https://official-visa-site.com",\n' +
-'    "notes": "Any important visa note"\n' +
-'  },\n' +
-     '  "safetyIndex": {\n' +
-'    "overallScore": "7.5/10",\n' +
-'    "overallLabel": "Generally Safe",\n' +
-'    "crimeLevel": "Low / Medium / High",\n' +
-'    "crimeDesc": "One line about crime situation",\n' +
-'    "womenSafety": "8/10",\n' +
-'    "womenDesc": "One line for solo women travelers",\n' +
-'    "healthRisk": "Low / Medium / High",\n' +
-'    "healthDesc": "Vaccinations, water safety, hospitals",\n' +
-'    "naturalDisaster": "Low / Medium / High",\n' +
-'    "disasterDesc": "Earthquakes, floods, typhoons etc",\n' +
-'    "politicalStability": "Stable / Moderate / Unstable",\n' +
-'    "politicalDesc": "One line about political situation",\n' +
-'    "advisoryLevel": "Level 1 / Level 2 / Level 3 / Level 4",\n' +
-'    "advisoryDesc": "Exercise Normal Precautions / Exercise Increased Caution / Reconsider Travel / Do Not Travel",\n' +
-'    "emergencyNumbers": {\n' +
-'      "police": "110",\n' +
-'      "ambulance": "118",\n' +
-'      "tourist": "1300"\n' +
-'    },\n' +
-'    "safetyTips": ["tip1", "tip2", "tip3"]\n' +
-'  },\n' +
+    '    { "month": "Jan", "temp": actual_jan_temp_celsius, "rainfall": actual_jan_rainfall_mm, "crowd": actual_jan_crowd_0_to_100, "desc": "actual Jan weather" },\n' +
+    '    { "month": "Feb", "temp": actual_feb_temp, "rainfall": actual_feb_rainfall, "crowd": actual_feb_crowd, "desc": "actual Feb weather" },\n' +
+    '    { "month": "Mar", "temp": actual_mar_temp, "rainfall": actual_mar_rainfall, "crowd": actual_mar_crowd, "desc": "actual Mar weather" },\n' +
+    '    { "month": "Apr", "temp": actual_apr_temp, "rainfall": actual_apr_rainfall, "crowd": actual_apr_crowd, "desc": "actual Apr weather" },\n' +
+    '    { "month": "May", "temp": actual_may_temp, "rainfall": actual_may_rainfall, "crowd": actual_may_crowd, "desc": "actual May weather" },\n' +
+    '    { "month": "Jun", "temp": actual_jun_temp, "rainfall": actual_jun_rainfall, "crowd": actual_jun_crowd, "desc": "actual Jun weather" },\n' +
+    '    { "month": "Jul", "temp": actual_jul_temp, "rainfall": actual_jul_rainfall, "crowd": actual_jul_crowd, "desc": "actual Jul weather" },\n' +
+    '    { "month": "Aug", "temp": actual_aug_temp, "rainfall": actual_aug_rainfall, "crowd": actual_aug_crowd, "desc": "actual Aug weather" },\n' +
+    '    { "month": "Sep", "temp": actual_sep_temp, "rainfall": actual_sep_rainfall, "crowd": actual_sep_crowd, "desc": "actual Sep weather" },\n' +
+    '    { "month": "Oct", "temp": actual_oct_temp, "rainfall": actual_oct_rainfall, "crowd": actual_oct_crowd, "desc": "actual Oct weather" },\n' +
+    '    { "month": "Nov", "temp": actual_nov_temp, "rainfall": actual_nov_rainfall, "crowd": actual_nov_crowd, "desc": "actual Nov weather" },\n' +
+    '    { "month": "Dec", "temp": actual_dec_temp, "rainfall": actual_dec_rainfall, "crowd": actual_dec_crowd, "desc": "actual Dec weather" }\n' +
+    '  ],\n' +
+    '  "visaDetails": {\n' +
+    '    "passportFriendly": ["actual visa-free countries for this destination"],\n' +
+    '    "visaOnArrival": ["actual visa on arrival countries"],\n' +
+    '    "visaRequired": ["actual countries that need advance visa"],\n' +
+    '    "duration": "actual visa duration for this destination",\n' +
+    '    "cost": "actual visa fee in USD",\n' +
+    '    "processingTime": "actual processing time",\n' +
+    '    "documents": ["actual required document 1","actual required document 2","actual required document 3"],\n' +
+    '    "applyLink": "actual official visa application website URL",\n' +
+    '    "notes": "actual important visa note for this destination"\n' +
+    '  },\n' +
+    '  "safetyIndex": {\n' +
+    '    "overallScore": "actual safety score out of 10",\n' +
+    '    "overallLabel": "actual safety label eg: Very Safe / Generally Safe / Exercise Caution / Dangerous",\n' +
+    '    "crimeLevel": "actual crime level: Low or Medium or High",\n' +
+    '    "crimeDesc": "actual one line about crime situation in this destination",\n' +
+    '    "womenSafety": "actual women safety score out of 10",\n' +
+    '    "womenDesc": "actual one line for solo women travelers in this destination",\n' +
+    '    "healthRisk": "actual health risk: Low or Medium or High",\n' +
+    '    "healthDesc": "actual vaccinations needed, water safety, hospital quality",\n' +
+    '    "naturalDisaster": "actual disaster risk: Low or Medium or High",\n' +
+    '    "disasterDesc": "actual natural disaster risks for this destination",\n' +
+    '    "politicalStability": "actual stability: Stable or Moderate or Unstable",\n' +
+    '    "politicalDesc": "actual one line about political situation",\n' +
+    '    "advisoryLevel": "actual US travel advisory: Level 1 or Level 2 or Level 3 or Level 4",\n' +
+    '    "advisoryDesc": "actual advisory description",\n' +
+    '    "emergencyNumbers": {\n' +
+    '      "police": "actual police emergency number of destination country",\n' +
+    '      "ambulance": "actual ambulance number of destination country",\n' +
+    '      "tourist": "actual tourist helpline number of destination country"\n' +
+    '    },\n' +
+    '    "safetyTips": ["actual safety tip 1 for this destination", "actual safety tip 2", "actual safety tip 3"]\n' +
+    '  },\n' +
     '  "related": [\n' +
-    '    { "name": "Dest 1", "country": "Country", "desc": "Why visit", "emoji": "🌏", "query": "travel guide dest 1" },\n' +
-    '    { "name": "Dest 2", "country": "Country", "desc": "Why visit", "emoji": "🏝️", "query": "travel guide dest 2" },\n' +
-    '    { "name": "Dest 3", "country": "Country", "desc": "Why visit", "emoji": "🗺️", "query": "travel guide dest 3" }\n' +
+    '    { "name": "actual similar destination 1", "country": "actual country", "desc": "actual reason why similar", "emoji": "relevant emoji", "query": "complete travel guide to actual destination 1" },\n' +
+    '    { "name": "actual similar destination 2", "country": "actual country", "desc": "actual reason why similar", "emoji": "relevant emoji", "query": "complete travel guide to actual destination 2" },\n' +
+    '    { "name": "actual similar destination 3", "country": "actual country", "desc": "actual reason why similar", "emoji": "relevant emoji", "query": "complete travel guide to actual destination 3" }\n' +
     '  ]\n' +
     '}\n' +
-    'All prices must be realistic USD values. Tailor to ' + budget + ' budget and ' + tripType + ' style.';
+    'IMPORTANT: Every single value must be REAL and ACCURATE for ' + query + '. Do NOT copy example values. Tailor everything to ' + budget + ' budget and ' + tripType + ' travel style.';
 }
-
+  
 // PARSE
 function parseResponse(text) {
   let clean = text.trim()
@@ -571,13 +573,14 @@ function renderDestMeta(data) {
 function renderQuickInfo(quickInfo) {
   const infoGrid = document.getElementById('infoGrid');
   infoGrid.innerHTML = (quickInfo || []).map(function(item, i) {
-    const isMonetary = item.label === 'Daily Budget' || item.label === 'Avg Flight' || item.label === 'Visa';
-    const value      = isMonetary ? convertPriceStr(item.value) : item.value;
-    return '<div class="info-card" style="animation-delay:' + (i * 0.05) + 's">' +
-      '<div class="info-card-icon">' + item.icon + '</div>' +
-      '<div class="info-card-label">' + item.label + '</div>' +
-      '<div class="info-card-value">' + value + '</div>' +
-      '<div class="info-card-sub">' + item.sub + '</div></div>';
+const isMonetary = item.label === 'Daily Budget' || item.label === 'Avg Flight' || item.label === 'Visa';
+const value = isMonetary ? convertPriceStr(item.value) : item.value;
+const sub = isMonetary ? convertPriceStr(item.sub) : item.sub;
+return '<div class="info-card" style="animation-delay:' + (i * 0.05) + 's">' +
+  '<div class="info-card-icon">' + item.icon + '</div>' +
+  '<div class="info-card-label">' + item.label + '</div>' +
+  '<div class="info-card-value">' + value + '</div>' +
+  '<div class="info-card-sub">' + sub + '</div></div>';
   }).join('');
 }
 

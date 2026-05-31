@@ -438,7 +438,7 @@ function buildPrompt(query, tripType, budget) {
 '      "ambulance": "118",\n' +
 '      "tourist": "1300"\n' +
 '    },\n' +
-'    "safetTips": ["tip1", "tip2", "tip3"]\n' +
+'    "safetyTips": ["tip1", "tip2", "tip3"]\n' +
 '  },\n' +
     '  "related": [\n' +
     '    { "name": "Dest 1", "country": "Country", "desc": "Why visit", "emoji": "🌏", "query": "travel guide dest 1" },\n' +

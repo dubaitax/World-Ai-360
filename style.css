@@ -2631,21 +2631,18 @@ body.cursor-hover .cursor-ring {
 .visa-apply-link:hover { opacity: 0.75; }
    /* ═══ VOICE SEARCH BUTTON ═══ */
 .voice-btn {
-  position: absolute;
-  right: 52px;
-  top: 50%;
-  transform: translateY(-50%);
+  position: relative;
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--text-muted);
+  color: var(--text2);
   padding: 6px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: color 0.2s, background 0.2s;
-  z-index: 5;
+  flex-shrink: 0;
 }
 
 .voice-btn:hover {

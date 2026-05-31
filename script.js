@@ -8,7 +8,7 @@
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 // Replace with your Gemini API key or inject via GitHub Actions / env variable
 const GROQ_API_KEY = 'YOUR_GROQ_KEY';
-const GROQ_MODEL = 'compound-beta-mini';
+const GROQ_MODEL = 'llama-3.3-70b-versatile';
 const PEXELS_API_KEY = 'YOUR_PEXELS_KEY';
 
 const CURRENCIES = {

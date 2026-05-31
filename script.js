@@ -487,7 +487,7 @@ fetch('https://api.pexels.com/v1/search?query=' + encodeURIComponent(searchQuery
   }
 })
 .catch(function() {
-  imgGrid.innerHTML = '<div style="color:rgba(255,255,255,0.3);padding:20px;">Photos load nahi hui</div>';
+  imgGrid.innerHTML = '<div style="color:rgba(255,255,255,0.3);padding:20px;">Photos could not be loaded</div>';
 });
   document.getElementById('destBadge').textContent   = (data.flag || '🌍') + ' ' + (data.region || data.country);
   document.getElementById('destName').textContent    = data.destination;
@@ -884,7 +884,7 @@ async function sendFollowup() {
 
   } catch(err) {
     if (typing) typing.remove();
-    appendChatMsg('ai', 'Sorry, kuch error aa gaya. Dobara try karo!');
+    appendChatMsg('ai', 'Sorry, something went wrong. Please try again!');
   }
   isChatLoading = false;
   btn.disabled  = false;
@@ -1114,7 +1114,7 @@ async function handleCompare() {
   var dest2 = (document.getElementById('compareInput2').value || '').trim();
 
   if (!dest1 || !dest2) {
-    alert('Dono destinations type karo!');
+    alert('Please enter both destinations!');
     return;
   }
   if (isCompareLoading) return;
@@ -1532,7 +1532,7 @@ function copyTripCard() {
         setTimeout(function() { btn.innerHTML = orig; }, 2000);
       });
     } catch(e) {
-      alert('Copy supported nahi hai is browser mein. Download use karo!');
+      alert('Copy not supported in this browser. Please use Download instead!');
     }
   });
 }
@@ -1810,7 +1810,7 @@ function startVoiceSearch() {
   var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
   if (!SpeechRecognition) {
-    alert('Aapka browser voice search support nahi karta. Chrome use karo!');
+    alert('Your browser does not support voice search. Please use Chrome!');
     return;
   }
 
@@ -1830,7 +1830,7 @@ function startVoiceSearch() {
     '<path d="M19 10v2a7 7 0 0 1-14 0v-2" stroke="currentColor"/>' +
     '<line x1="12" y1="19" x2="12" y2="23" stroke="currentColor"/>' +
     '<line x1="8" y1="23" x2="16" y2="23" stroke="currentColor"/>';
-  input.placeholder = '🎙️ Bol raha hoon... sunna band karo toh ruko';
+  input.placeholder = '🎙️ Listening... speak now';
 
   recog.onresult = function(e) {
     var transcript = e.results[0][0].transcript;
@@ -1857,7 +1857,7 @@ function startVoiceSearch() {
     btn.classList.remove('voice-listening');
     input.placeholder = "e.g. 'Best time to visit Switzerland'...";
     if (e.error === 'not-allowed') {
-      alert('Microphone permission do browser mein!');
+      alert('Please allow microphone permission in your browser!');
     }
   };
 
@@ -1894,7 +1894,7 @@ function handlePhotoUpload(e) {
 function processPhotoFile(file) {
   // File size check — 10MB max
   if (file.size > 10 * 1024 * 1024) {
-    alert('Photo bahut badi hai! 10MB se choti photo use karo.');
+    alert('Photo is too large! Please use a photo under 10MB.');
     return;
   }
 
@@ -2016,7 +2016,7 @@ async function identifyDestination() {
   } catch(err) {
     document.getElementById('photoLoading').style.display = 'none';
     document.getElementById('photoIdentifyBtn').style.display = 'flex';
-    document.getElementById('photoErrorMsg').textContent = err.message || 'Identify nahi ho saka. Doosri photo try karo.';
+    document.getElementById('photoErrorMsg').textContent = err.message || 'Could not identify. Please try another photo.';
     document.getElementById('photoError').style.display = 'block';
     console.error('Photo identify error:', err);
   }
@@ -2043,7 +2043,7 @@ async function generateDreamTrip() {
 
   if (!mood) {
     input.focus();
-    input.placeholder = '⚠️ Pehle apna mood/vibe likho!';
+    input.placeholder = '⚠️ Please describe your mood first!';
     setTimeout(function() {
       input.placeholder = "e.g. 'I want snow mountains and adventure under $1500'...";
     }, 2000);
@@ -2052,8 +2052,7 @@ async function generateDreamTrip() {
 
   var btn = document.getElementById('dreamBtn');
   btn.disabled = true;
-  btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 0.8s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg><span>Dhundh raha hoon...</span>';
-
+  btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 0.8s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg><span>Searching...</span>';
   document.getElementById('dreamLoading').style.display = 'flex';
   document.getElementById('dreamResults').style.display = 'none';
   document.getElementById('dreamError').style.display   = 'none';
@@ -2104,7 +2103,7 @@ async function generateDreamTrip() {
     var data = await res.json();
     var text = data.choices && data.choices[0] &&
                data.choices[0].message && data.choices[0].message.content;
-    if (!text) throw new Error('Koi response nahi mila.');
+    if (!text) throw new Error('No response received.');
 
     var clean = text.trim()
       .replace(/^```json\s*/i, '')
@@ -2116,20 +2115,20 @@ async function generateDreamTrip() {
 
   } catch(err) {
     document.getElementById('dreamLoading').style.display = 'none';
-    document.getElementById('dreamErrorMsg').textContent = err.message || 'Error aa gaya. Dobara try karo!';
+    document.getElementById('dreamErrorMsg').textContent = err.message || 'Something went wrong. Please try again!';
     document.getElementById('dreamError').style.display  = 'block';
     console.error('Dream trip error:', err);
   }
 
   btn.disabled = false;
-  btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><span>Mera Dream Trip Dhundo</span>';
+  btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><span>Find My Dream Trip</span>';
 }
 
 function renderDreamResults(trips) {
   document.getElementById('dreamLoading').style.display = 'none';
 
   if (!trips || trips.length === 0) {
-    document.getElementById('dreamErrorMsg').textContent = 'Koi result nahi mila. Dobara try karo!';
+    document.getElementById('dreamErrorMsg').textContent = 'No results found. Please try again!';
     document.getElementById('dreamError').style.display  = 'block';
     return;
   }
@@ -2170,7 +2169,7 @@ function renderDreamResults(trips) {
         '<div class="dream-hidden-gem">💎 ' + trip.hiddenGem + '</div>' : '') +
 
       '<button class="dream-explore-btn" onclick="searchFromCard(\'' + escapeAttr(trip.searchQuery || '') + '\')">' +
-        '✈️ Full Guide Dekho →' +
+        '✈️ View Full Guide →' +
       '</button>' +
 
     '</div>';
@@ -2185,7 +2184,7 @@ async function exportTripPDF() {
 
   var btn = document.getElementById('pdfExportBtn');
   btn.disabled = true;
-  btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 0.8s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg><span>PDF ban raha hai...</span>';
+  btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 0.8s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg><span>Generating PDF...</span>';
 
   try {
     var d    = lastParsedData;
@@ -2476,7 +2475,7 @@ async function exportTripPDF() {
 
   } catch(err) {
     console.error('PDF error:', err);
-    alert('PDF export mein error: ' + err.message);
+    alert('PDF export error: ' + err.message);
   }
 
   btn.disabled = false;
@@ -2606,7 +2605,8 @@ function initGlobe() {
     console.error('Globe init error:', err);
     container.innerHTML =
       '<div style="color:rgba(255,255,255,0.4);text-align:center;padding:60px 20px;">' +
-      '🌍<br><br>Globe load nahi hua.<br>Page refresh karo.</div>';
+      '🌍<br><br>Globe could not load.<br>Please refresh the page.</div>';
+
   }
 }
 

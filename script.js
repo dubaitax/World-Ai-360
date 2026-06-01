@@ -2819,3 +2819,11 @@ function getBarWidth(value, label) {
   if (match) return Math.round((parseFloat(match[1]) / 10) * 100);
   return 50;
 }
+// PWA Service Worker Register
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(r => console.log('SW registered:', r.scope))
+      .catch(e => console.log('SW error:', e));
+  });
+}

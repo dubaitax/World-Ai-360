@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://worlddestination.github.io/World-Ai-360/sitemap.xml
+Sitemap: https://worlddestination.github.io/Norvixy/sitemap.xml
